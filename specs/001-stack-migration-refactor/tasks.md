@@ -31,13 +31,13 @@
 
 **CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T006 Implement Pydantic settings in `server/src/etelemetry_server/settings.py` — load from env: DATABASE_URL, MAXMIND_DB_PATH, GITHUB_TOKEN (optional), CACHE_TTL_SECONDS (default 21600), ALLOWLIST_PATH, TIME_BUCKET_HOURS (default 1)
-- [ ] T007 Implement database engine and async session factory in `server/src/etelemetry_server/db.py` — `create_async_engine` with asyncpg, session dependency for FastAPI
-- [ ] T008 Implement SQLAlchemy ORM models in `server/src/etelemetry_server/models.py` — `Project`, `VersionCheck`, `UsageAggregate` tables per data-model.md with all indexes and unique constraints
-- [ ] T009 Initialize Alembic in `server/alembic/` with `alembic.ini` and generate initial migration from models (auto-generate revision)
-- [ ] T010 [P] Implement FastAPI application factory in `server/src/etelemetry_server/app.py` — lifespan handler (init DB, load GeoIP reader, load allowlist), mount starlette-compress middleware, include route routers
-- [ ] T011 [P] Implement allowlist loader in `server/src/etelemetry_server/allowlist.py` — load YAML file, SIGHUP handler to reload, sync allowlist entries to `projects` table (insert missing, deactivate removed)
-- [ ] T012 [P] Write unit tests for settings, models, and allowlist in `server/tests/unit/test_settings.py`, `server/tests/unit/test_models.py`, `server/tests/unit/test_allowlist.py`
+- [x] T006 Implement Pydantic settings in `server/src/etelemetry_server/settings.py` — load from env: DATABASE_URL, MAXMIND_DB_PATH, GITHUB_TOKEN (optional), CACHE_TTL_SECONDS (default 21600), ALLOWLIST_PATH, TIME_BUCKET_HOURS (default 1)
+- [x] T007 Implement database engine and async session factory in `server/src/etelemetry_server/db.py` — `create_async_engine` with asyncpg, session dependency for FastAPI
+- [x] T008 Implement SQLAlchemy ORM models in `server/src/etelemetry_server/models.py` — `Project`, `VersionCheck`, `UsageAggregate` tables per data-model.md with all indexes and unique constraints
+- [x] T009 Initialize Alembic in `server/alembic/` with `alembic.ini` and generate initial migration from models (auto-generate revision)
+- [x] T010 [P] Implement FastAPI application factory in `server/src/etelemetry_server/app.py` — lifespan handler (init DB, load GeoIP reader, load allowlist), mount starlette-compress middleware, include route routers
+- [x] T011 [P] Implement allowlist loader in `server/src/etelemetry_server/allowlist.py` — load YAML file, SIGHUP handler to reload, sync allowlist entries to `projects` table (insert missing, deactivate removed)
+- [x] T012 [P] Write unit tests for settings, models, and allowlist in `server/tests/unit/test_settings.py`, `server/tests/unit/test_models.py`, `server/tests/unit/test_allowlist.py`
 
 **Checkpoint**: Database schema, app factory, and allowlist ready — user story implementation can begin
 

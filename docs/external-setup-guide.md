@@ -17,16 +17,15 @@ etelemetry deployment. Follow each section in order.
 ### 1.2 Environments for PyPI Publishing
 
 etelemetry uses PyPI trusted publishing (OIDC) — no API tokens needed.
+Both stable and pre-release versions publish to PyPI (pip only installs
+pre-releases when `--pre` is passed or an exact version is pinned).
 
-**Create two environments:**
+**Create one environment:**
 
 1. Go to **Settings → Environments → New environment**
 2. Create `pypi`:
-   - Add deployment protection: require reviewer approval
+   - Optionally add deployment protection (require reviewer approval)
    - No secrets needed (OIDC handles auth)
-3. Create `testpypi`:
-   - No protection rules (pre-releases go here automatically)
-   - No secrets needed
 
 ### 1.3 Repository Secrets for AWS Deployment
 
@@ -50,7 +49,7 @@ Go to **Settings → Secrets and variables → Actions → Variables**:
 
 ## 2. PyPI Setup (Trusted Publishing)
 
-### 2.1 PyPI (production releases)
+### 2.1 Configure Trusted Publisher
 
 1. Go to https://pypi.org/manage/account/publishing/
 2. Click **Add a new pending publisher**
@@ -62,28 +61,16 @@ Go to **Settings → Secrets and variables → Actions → Variables**:
    - Environment name: `pypi`
 4. Click **Add**
 
-### 2.2 TestPyPI (pre-releases)
-
-1. Go to https://test.pypi.org/manage/account/publishing/
-2. Click **Add a new pending publisher**
-3. Fill in:
-   - PyPI project name: `etelemetry`
-   - Owner: `sensein`
-   - Repository: `etelemetry`
-   - Workflow name: `publish.yml`
-   - Environment name: `testpypi`
-4. Click **Add**
-
-### 2.3 First Release Workflow
+### 2.2 First Release Workflow
 
 ```bash
-# Pre-release (goes to TestPyPI)
+# Pre-release (goes to PyPI, but pip won't install without --pre)
 git tag v2.0.0a1
 git push origin v2.0.0a1
-# → Creates GitHub pre-release → publishes to TestPyPI
+# → Creates GitHub pre-release → publishes to PyPI as pre-release
 
-# Test install from TestPyPI
-pip install --index-url https://test.pypi.org/simple/ etelemetry==2.0.0a1
+# Test install of pre-release from PyPI
+pip install --pre etelemetry
 
 # Once verified, create the stable release (goes to PyPI)
 git tag v2.0.0

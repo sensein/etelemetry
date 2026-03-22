@@ -1,0 +1,93 @@
+{
+  "requests": [
+    {
+      "_id": "aaa111",
+      "owner": "nipy",
+      "repository": "nipype",
+      "version": "1.8.6",
+      "is_ci": false,
+      "access_time": "2025-06-15T10:30:45Z",
+      "remote_addr": "203.0.113.10"
+    },
+    {
+      "_id": "aaa222",
+      "owner": "nipy",
+      "repository": "nipype",
+      "version": "1.8.6",
+      "is_ci": true,
+      "access_time": "2025-06-15T10:45:00Z",
+      "remote_addr": "198.51.100.20"
+    },
+    {
+      "_id": "aaa333",
+      "owner": "nipy",
+      "repository": "nipype",
+      "version": "1.8.6",
+      "is_ci": false,
+      "access_time": "2025-06-15T10:15:00Z",
+      "remote_addr": "203.0.113.10"
+    },
+    {
+      "_id": "aaa444",
+      "owner": "poldracklab",
+      "repository": "fmriprep",
+      "version": "23.1.0",
+      "is_ci": false,
+      "access_time": "2025-07-01T14:00:00Z",
+      "remote_addr": "192.0.2.50"
+    },
+    {
+      "_id": "aaa555",
+      "owner": "nipy",
+      "repository": "nipype",
+      "version": "1.8.6",
+      "is_ci": false,
+      "access_time": "2025-06-15T10:30:45Z",
+      "remote_addr": "203.0.113.10"
+    },
+    {
+      "_id": "bad_missing_owner",
+      "repository": "somerepo",
+      "version": "0.1.0",
+      "is_ci": false,
+      "access_time": "2025-06-15T12:00:00Z",
+      "remote_addr": "10.0.0.1"
+    },
+    {
+      "_id": "bad_missing_version",
+      "owner": "someone",
+      "repository": "somerepo",
+      "is_ci": false,
+      "access_time": "2025-06-15T12:00:00Z",
+      "remote_addr": "10.0.0.2"
+    },
+    {
+      "_id": "bad_missing_repo",
+      "owner": "someone",
+      "version": "0.1.0",
+      "is_ci": false,
+      "access_time": "2025-06-15T12:00:00Z",
+      "remote_addr": "10.0.0.3"
+    }
+  ],
+  "geo": [
+    {
+      "_id": "ggg111",
+      "remote_addr": "203.0.113.10",
+      "city": "Cambridge",
+      "region_name": "Massachusetts",
+      "country_name": "United States",
+      "latitude": 42.3736,
+      "longitude": -71.1097
+    },
+    {
+      "_id": "ggg222",
+      "remote_addr": "198.51.100.20",
+      "city": "London",
+      "region_name": "England",
+      "country_name": "United Kingdom",
+      "latitude": 51.5074,
+      "longitude": -0.1278
+    }
+  ]
+}

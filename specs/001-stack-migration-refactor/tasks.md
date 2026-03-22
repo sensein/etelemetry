@@ -100,12 +100,12 @@
 
 > **NOTE: Write these tests FIRST, ensure they FAIL before implementation**
 
-- [ ] T031 [US3] Write migration test in `server/tests/integration/test_migration.py` — use sample MongoDB fixture data (JSON), run migration against testcontainers PostgreSQL, verify: all valid records imported, no IP fields in DB, duplicate handling, malformed record skipping with warning log, storage size comparison (SC-003)
+- [x] T031 [US3] Write migration test in `server/tests/integration/test_migration.py` — use sample MongoDB fixture data (JSON), run migration against testcontainers PostgreSQL, verify: all valid records imported, no IP fields in DB, duplicate handling, malformed record skipping with warning log, storage size comparison (SC-003)
 
 ### Implementation for User Story 3
 
-- [ ] T032 [US3] Implement migration tool in `tools/migrate.py` — CLI with `--mongo-uri` and `--pg-uri` args; connect to MongoDB `et` database; iterate `requests` + `geo` collections; join on `remote_addr`; map fields per data-model.md migration mapping; insert into PostgreSQL using content-addressed dedup; strip all IP fields; log progress, warnings for malformed records; `--verify` flag to compare counts; add `pymongo` to server dev dependencies
-- [ ] T033 [US3] Run migration test, verify pass
+- [x] T032 [US3] Implement migration tool in `tools/migrate.py` — CLI with `--mongo-uri` and `--pg-uri` args; connect to MongoDB `et` database; iterate `requests` + `geo` collections; join on `remote_addr`; map fields per data-model.md migration mapping; insert into PostgreSQL using content-addressed dedup; strip all IP fields; log progress, warnings for malformed records; `--verify` flag to compare counts; add `pymongo` to server dev dependencies
+- [x] T033 [US3] Run migration test, verify pass
 
 **Checkpoint**: Migration tool ready for production use against EC2 MongoDB.
 

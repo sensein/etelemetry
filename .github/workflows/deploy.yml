@@ -1,0 +1,51 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "server/**"
+      - "src/**"
+      - "deploy/**"
+      - ".github/workflows/deploy.yml"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: |
+          docker build -f deploy/Dockerfile -t etelemetry-server:${{ github.sha }} .
+          docker tag etelemetry-server:${{ github.sha }} etelemetry-server:latest
+
+      - name: Deploy to AWS EC2
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.AWS_SSH_PRIVATE_KEY }}
+          SERVER_HOST: ${{ secrets.AWS_SERVER_HOST }}
+          SERVER_USER: ${{ secrets.AWS_SERVER_USER }}
+        run: |
+          # Save SSH key
+          mkdir -p ~/.ssh
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+
+          # Save and transfer image
+          docker save etelemetry-server:latest | gzip > /tmp/etelemetry-server.tar.gz
+          scp -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no \
+            /tmp/etelemetry-server.tar.gz \
+            "$SERVER_USER@$SERVER_HOST:/tmp/"
+
+          # Deploy on remote
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no \
+            "$SERVER_USER@$SERVER_HOST" << 'DEPLOY'
+          cd /opt/etelemetry
+          docker load < /tmp/etelemetry-server.tar.gz
+          docker compose -f deploy/docker-compose.yml up -d --no-build server
+          rm /tmp/etelemetry-server.tar.gz
+          DEPLOY
+
+          # Cleanup
+          rm -f ~/.ssh/deploy_key /tmp/etelemetry-server.tar.gz

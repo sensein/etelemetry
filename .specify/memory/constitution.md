@@ -1,7 +1,9 @@
 <!--
   Sync Impact Report
   ==================
-  Version change: 0.0.0 (template) → 2026.03.22
+  Version change: 2026.03.22 → 2026.03.22.1
+  Previous version ratified: 2026-03-22 (initial)
+  Amendment: Added CI failure resolution requirement to Principle III
   Modified principles: N/A (initial population from template)
   Added sections:
     - Principle I: Isolated Environments
@@ -67,8 +69,9 @@ parallel workers MUST coordinate to avoid file conflicts.
 - Branches MUST be used for features; `main` is protected.
 - Before committing, subagents MUST pull latest changes and resolve
   conflicts rather than force-pushing.
-
-### IV. Test-Driven with Real Use Cases
+- When working with a GitHub repository, tasks MUST ensure that remote
+  CI passes. If CI fails after a push, the failure MUST be diagnosed
+  and fixed before proceeding to the next task.
 
 Every specification MUST conclude with real-use-case validation.
 Tests MUST exercise actual user workflows, not just unit-level mocks.
@@ -188,4 +191,4 @@ verify compliance with these principles.
   constitution, an amendment MUST be proposed rather than working
   around the gap silently.
 
-**Version**: 2026.03.22 | **Ratified**: 2026-03-22 | **Last Amended**: 2026-03-22
+**Version**: 2026.03.22.1 | **Ratified**: 2026-03-22 | **Last Amended**: 2026-03-22

@@ -9,8 +9,11 @@ from typing import AsyncGenerator
 
 from fastapi import FastAPI
 
+import httpx
+
 from etelemetry_server.allowlist import load_allowlist, sync_allowlist_to_db
 from etelemetry_server.db import async_session_factory, engine, init_db
+from etelemetry_server.services.geolocation import GeoLocator
 from etelemetry_server.settings import settings
 
 logger = logging.getLogger(__name__)
@@ -41,6 +44,12 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     else:
         logger.info("GeoIP database not found at %s; skipping", geoip_path)
 
+    # Create GeoLocator service
+    app.state.geolocator = GeoLocator(settings.MAXMIND_DB_PATH)
+
+    # Create shared httpx.AsyncClient for outbound requests
+    app.state.http_client = httpx.AsyncClient()
+
     # Load allowlist and sync to DB
     allowlist = load_allowlist(settings.ALLOWLIST_PATH)
     app.state.allowlist = allowlist
@@ -55,6 +64,12 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     # --- Shutdown ---
     if app.state.geoip_reader is not None:
         app.state.geoip_reader.close()
+
+    if hasattr(app.state, "geolocator") and app.state.geolocator is not None:
+        app.state.geolocator.close()
+
+    if hasattr(app.state, "http_client") and app.state.http_client is not None:
+        await app.state.http_client.aclose()
 
     await engine.dispose()
 

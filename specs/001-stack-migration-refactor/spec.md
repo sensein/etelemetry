@@ -227,7 +227,13 @@ successfully.
   project-level configuration, then a default URL.
 - **FR-008**: The client library MUST maintain backward compatibility with
   the existing public API (`get_project`, `check_available_version`,
-  `BadVersionError`).
+  `BadVersionError`). The server MUST also maintain backward compatibility
+  with existing deployed clients: the response JSON shape (`version`,
+  `bad_versions` fields) MUST remain unchanged, and the server MUST accept
+  requests at the legacy `/et/projects/{owner}/{repo}` URL path (via nginx
+  rewrite or server-side route alias) so that old clients continue working
+  during transition. Old-style CI query parameters MUST be accepted without
+  error (treated as non-CI if the new `ci` param is absent).
 - **FR-009**: The system MUST provide a web dashboard showing per-project
   usage counts, version distribution, and geographic distribution via an
   interactive map with drill-down (country → region → city) and a
@@ -325,6 +331,10 @@ successfully.
   workflow. Updated User Story 5.
 - Q: How is the project allowlist managed? → A: Configuration file
   (YAML/JSON) in the deployment, reloaded on restart or signal.
+- (Direct integration) Backward compatibility: server MUST accept requests
+  at legacy `/et/projects/` path (nginx rewrite), response JSON shape
+  unchanged (`version`, `bad_versions`), old-style CI query params accepted
+  without error. Updated FR-008.
 
 ## Success Criteria *(mandatory)*
 

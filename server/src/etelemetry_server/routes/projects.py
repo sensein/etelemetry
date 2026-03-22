@@ -38,7 +38,16 @@ async def get_project_version(
         Whether the caller is running in CI.
     v : str | None
         The callers current version (recorded for telemetry).
+
+    Backward compatibility: old clients send CI info as individual query
+    params (name, isPR, etc.) instead of ``?ci=true``. Detect those.
     """
+    # Backward compat: detect old-style CI params from ci_info.info()
+    if not ci:
+        old_ci_keys = {"name", "isPR", "isCI"}
+        if old_ci_keys & set(request.query_params.keys()):
+            ci = True
+
     # 1. Check allowlist
     allowlist: list[dict[str, str]] = getattr(request.app.state, "allowlist", [])
     allowed = any(

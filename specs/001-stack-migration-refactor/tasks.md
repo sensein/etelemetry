@@ -59,14 +59,15 @@
 - [ ] T015 [P] [US1] Implement geolocation service in `server/src/etelemetry_server/services/geolocation.py` — load MaxMind GeoLite2 Reader at startup, `resolve(ip: str) -> GeoResult` returning city/region/country/coords, handle lookup failures (return "unknown")
 - [ ] T016 [P] [US1] Implement version checker service in `server/src/etelemetry_server/services/version_checker.py` — async GitHub API via httpx (releases then tags fallback), cache in `projects` table with TTL, fetch `.et` file for bad_versions, handle rate limiting gracefully
 - [ ] T017 [P] [US1] Implement usage recorder service in `server/src/etelemetry_server/services/usage_recorder.py` — content-addressed upsert: `INSERT INTO version_checks ... ON CONFLICT (composite_key) DO UPDATE SET count = count + 1`, compute time_bucket by truncating to hour
-- [ ] T018 [US1] Implement health route in `server/src/etelemetry_server/routes/health.py` — `GET /` returning `{"name": "etelemetry", "version": ...}`
-- [ ] T019 [US1] Implement projects route in `server/src/etelemetry_server/routes/projects.py` — `GET /projects/{owner}/{repo}` orchestrating: allowlist check → geolocation → usage record → version lookup → response; accept `?ci=` and `?v=` query params
-- [ ] T020 [P] [US1] Implement client `src/etelemetry/errors.py` — `BadVersionError(RuntimeError)`
-- [ ] T021 [P] [US1] Implement client `src/etelemetry/config.py` — `resolve_url(server_url=None)` with precedence: param → `ETELEMETRY_URL` env → default; `NO_ET` check
-- [ ] T022 [US1] Implement client `src/etelemetry/client.py` — `get_project(repo, **kwargs)` and `check_available_version(project, version, lgr, raise_exception)` per contracts/api.md; use `requests` with 5s timeout; send `?ci=` and `?v=` params
-- [ ] T023 [US1] Implement client `src/etelemetry/__init__.py` — export `get_project`, `check_available_version`, `BadVersionError`, `__version__`
-- [ ] T024 [US1] Write client unit tests in `tests/unit/test_client.py` — mock server responses, verify outdated warning, bad version critical warning, `BadVersionError` raise, `NO_ET` disables requests
-- [ ] T025 [US1] Run contract and integration tests, verify all pass
+- [ ] T018 [US1] Implement in-memory LRU cache in `server/src/etelemetry_server/services/version_checker.py` — cache recent version lookups in memory so the server can respond to version-check requests even when PostgreSQL is unreachable; populate on successful DB reads, serve from memory on DB failure
+- [ ] T019 [US1] Implement health route in `server/src/etelemetry_server/routes/health.py` — `GET /` returning `{"name": "etelemetry", "version": ...}`
+- [ ] T020 [US1] Implement projects route in `server/src/etelemetry_server/routes/projects.py` — `GET /projects/{owner}/{repo}` orchestrating: allowlist check → geolocation → usage record → version lookup → response; accept `?ci=` and `?v=` query params; disable uvicorn access log IP logging
+- [ ] T021 [P] [US1] Implement client `src/etelemetry/errors.py` — `BadVersionError(RuntimeError)`
+- [ ] T022 [P] [US1] Implement client `src/etelemetry/config.py` — `resolve_url(server_url=None)` with basic precedence: `ETELEMETRY_URL` env → hardcoded default; `NO_ET` check
+- [ ] T023 [US1] Implement client `src/etelemetry/client.py` — `get_project(repo, **kwargs)` and `check_available_version(project, version, lgr, raise_exception)` per contracts/api.md; use `requests` with 5s timeout; send `?ci=` and `?v=` params
+- [ ] T024 [US1] Implement client `src/etelemetry/__init__.py` — export `get_project`, `check_available_version`, `BadVersionError`, `__version__`
+- [ ] T025 [US1] Write client unit tests in `tests/unit/test_client.py` — mock server responses, verify outdated warning, bad version critical warning, `BadVersionError` raise, `NO_ET` disables requests
+- [ ] T026 [US1] Run contract and integration tests, verify all pass
 
 **Checkpoint**: Core version-check loop fully functional. Client and server independently testable.
 
@@ -80,10 +81,10 @@
 
 ### Implementation for User Story 2
 
-- [ ] T026 [US2] Update `src/etelemetry/config.py` — add `default_url` module-level attribute, document precedence chain in docstring
-- [ ] T027 [US2] Update `src/etelemetry/client.py` — add `server_url` optional parameter to `get_project()` and `check_available_version()`, pass through to `resolve_url()`
-- [ ] T028 [US2] Write tests in `tests/unit/test_config.py` — verify precedence: param > env var > `config.default_url` > hardcoded default; verify `NO_ET` short-circuits
-- [ ] T029 [US2] Write integration test in `tests/integration/test_custom_url.py` — start two mock servers, verify client routes to correct one based on config
+- [ ] T027 [US2] Update `src/etelemetry/config.py` — add `default_url` module-level attribute, add `server_url` param support to `resolve_url()`, document full precedence chain (param → env → default_url → hardcoded)
+- [ ] T028 [US2] Update `src/etelemetry/client.py` — add `server_url` optional parameter to `get_project()` and `check_available_version()`, pass through to `resolve_url()`
+- [ ] T029 [US2] Write tests in `tests/unit/test_config.py` — verify precedence: param > env var > `config.default_url` > hardcoded default; verify `NO_ET` short-circuits
+- [ ] T030 [US2] Write integration test in `tests/integration/test_custom_url.py` — start two mock servers, verify client routes to correct one based on config
 
 **Checkpoint**: Client configurable URL working. Backward compatible — no existing code breaks.
 
@@ -95,11 +96,16 @@
 
 **Independent Test**: Export sample MongoDB data, run migration, verify records in PostgreSQL with no IPs, aggregated stats match
 
+### Tests for User Story 3
+
+> **NOTE: Write these tests FIRST, ensure they FAIL before implementation**
+
+- [ ] T031 [US3] Write migration test in `server/tests/integration/test_migration.py` — use sample MongoDB fixture data (JSON), run migration against testcontainers PostgreSQL, verify: all valid records imported, no IP fields in DB, duplicate handling, malformed record skipping with warning log, storage size comparison (SC-003)
+
 ### Implementation for User Story 3
 
-- [ ] T030 [US3] Implement migration tool in `tools/migrate.py` — CLI with `--mongo-uri` and `--pg-uri` args; connect to MongoDB `et` database; iterate `requests` + `geo` collections; join on `remote_addr`; map fields per data-model.md migration mapping; insert into PostgreSQL using content-addressed dedup; strip all IP fields; log progress, warnings for malformed records; `--verify` flag to compare counts
-- [ ] T031 [US3] Write migration test in `server/tests/integration/test_migration.py` — use sample MongoDB fixture data (JSON), run migration against testcontainers PostgreSQL, verify: all valid records imported, no IP fields in DB, duplicate handling, malformed record skipping with warning log
-- [ ] T032 [US3] Run migration test, verify pass
+- [ ] T032 [US3] Implement migration tool in `tools/migrate.py` — CLI with `--mongo-uri` and `--pg-uri` args; connect to MongoDB `et` database; iterate `requests` + `geo` collections; join on `remote_addr`; map fields per data-model.md migration mapping; insert into PostgreSQL using content-addressed dedup; strip all IP fields; log progress, warnings for malformed records; `--verify` flag to compare counts; add `pymongo` to server dev dependencies
+- [ ] T033 [US3] Run migration test, verify pass
 
 **Checkpoint**: Migration tool ready for production use against EC2 MongoDB.
 
@@ -111,17 +117,22 @@
 
 **Independent Test**: Seed DB with sample data, open dashboard, verify per-project stats, map drill-down, time filtering, accessibility audit
 
+### Tests for User Story 4
+
+> **NOTE: Write these tests FIRST, ensure they FAIL before implementation**
+
+- [ ] T034 [P] [US4] Write dashboard contract tests in `server/tests/contract/test_dashboard_api.py` — verify response shapes for stats, geo, and projects endpoints per contracts/api.md
+- [ ] T035 [P] [US4] Write dashboard integration test in `server/tests/integration/test_dashboard.py` — seed DB with 12+ months of sample data, verify HTML pages render, API returns correct aggregated data, page loads within 3 seconds (SC-005)
+
 ### Implementation for User Story 4
 
-- [ ] T033 [US4] Implement aggregation service in `server/src/etelemetry_server/services/aggregation.py` — tiered rollup job: compute daily/weekly/monthly aggregates from version_checks; configurable age thresholds; callable as background task or CLI command
-- [ ] T034 [US4] Implement dashboard API routes in `server/src/etelemetry_server/routes/dashboard.py` — `GET /dashboard/api/projects` (project list with counts), `GET /dashboard/api/stats/{owner}/{repo}` (stats with time range + granularity params), `GET /dashboard/api/geo/{owner}/{repo}` (GeoJSON for Leaflet)
-- [ ] T035 [P] [US4] Create dashboard base template in `server/src/etelemetry_server/dashboard/templates/base.html` — HTML skeleton with htmx (CDN), Leaflet.js (CDN), CSS for accessibility (skip links, focus indicators, sufficient contrast, responsive layout)
-- [ ] T036 [US4] Create project list page template in `server/src/etelemetry_server/dashboard/templates/projects.html` — list all tracked projects with total check counts, link to detail; `GET /dashboard/` route serves this
-- [ ] T037 [US4] Create project detail page template in `server/src/etelemetry_server/dashboard/templates/project_detail.html` — interactive Leaflet map (drill-down country→region→city via GeoJSON endpoint), summary table, version distribution chart, timeline; time-range filter via htmx partial updates
-- [ ] T038 [US4] Add static JS in `server/src/etelemetry_server/dashboard/static/dashboard.js` — Leaflet map initialization, GeoJSON layer with click drill-down, htmx event handlers for filter updates
-- [ ] T039 [US4] Write dashboard contract tests in `server/tests/contract/test_dashboard_api.py` — verify response shapes for stats, geo, and projects endpoints per contracts/api.md
-- [ ] T040 [US4] Write dashboard integration test in `server/tests/integration/test_dashboard.py` — seed DB with sample data, verify HTML pages render, API returns correct aggregated data
-- [ ] T041 [US4] Run accessibility audit — verify WCAG 2.1 AA compliance: keyboard navigation, screen reader landmarks, color contrast, focus management; document results
+- [ ] T036 [US4] Implement aggregation service in `server/src/etelemetry_server/services/aggregation.py` — tiered rollup job: compute daily/weekly/monthly aggregates from version_checks; configurable age thresholds; callable as background task or CLI command
+- [ ] T037 [US4] Implement dashboard API routes in `server/src/etelemetry_server/routes/dashboard.py` — `GET /dashboard/api/projects` (project list with counts), `GET /dashboard/api/stats/{owner}/{repo}` (stats with time range + granularity params), `GET /dashboard/api/geo/{owner}/{repo}` (GeoJSON for Leaflet)
+- [ ] T038 [P] [US4] Create dashboard base template in `server/src/etelemetry_server/dashboard/templates/base.html` — HTML skeleton with htmx (CDN), Leaflet.js (CDN), CSS for accessibility (skip links, focus indicators, sufficient contrast, responsive layout)
+- [ ] T039 [US4] Create project list page template in `server/src/etelemetry_server/dashboard/templates/projects.html` — list all tracked projects with total check counts, link to detail; `GET /dashboard/` route serves this
+- [ ] T040 [US4] Create project detail page template in `server/src/etelemetry_server/dashboard/templates/project_detail.html` — interactive Leaflet map (drill-down country→region→city via GeoJSON endpoint), summary table, version distribution chart, timeline; time-range filter via htmx partial updates
+- [ ] T041 [US4] Add static JS in `server/src/etelemetry_server/dashboard/static/dashboard.js` — Leaflet map initialization, GeoJSON layer with click drill-down, htmx event handlers for filter updates
+- [ ] T042 [US4] Run accessibility audit — verify WCAG 2.1 AA compliance: keyboard navigation, screen reader landmarks, color contrast, focus management; document results
 
 **Checkpoint**: Dashboard fully functional with map, table, filtering, and accessibility.
 
@@ -135,15 +146,15 @@
 
 ### Implementation for User Story 5
 
-- [ ] T042 [US5] Create `deploy/Dockerfile` — multi-stage build: uv install server package, copy GeoIP config, expose port 8000, entrypoint: alembic upgrade + uvicorn
-- [ ] T043 [P] [US5] Create `deploy/docker-compose.yml` — services: postgres (16-alpine, volume for data), server (build from Dockerfile, depends_on postgres, env from .env), nginx (reverse proxy, port 80/443), geoipupdate (MaxMind DB updates, shared volume with server)
-- [ ] T044 [P] [US5] Create `deploy/nginx.conf` — reverse proxy to server:8000, strip IP from access logs (custom log format replacing $remote_addr with "-"), HTTPS config placeholder
-- [ ] T045 [US5] Create `deploy/allowlist.yml` — sample allowlist with a few sensein projects, documented format
-- [ ] T046 [P] [US5] Create `deploy/geoipupdate.conf` — MaxMind GeoIP update config template with license key placeholder
-- [ ] T047 [US5] Create `.github/workflows/ci.yml` — on PR: checkout, uv setup, install deps, run ruff lint, run pytest (client tests + server tests with testcontainers), upload coverage
-- [ ] T048 [US5] Create `.github/workflows/deploy.yml` — on push to main: build Docker image, push to registry, SSH deploy to AWS EC2 (or use docker context), run alembic migrations, restart services; secrets: AWS credentials, server host, MaxMind key
-- [ ] T049 [US5] Test Docker Compose deployment locally — `docker compose up`, verify all services healthy, make version check request, verify dashboard accessible
-- [ ] T050 [US5] Test GitHub Actions CI workflow — push branch, verify checks pass
+- [ ] T043 [US5] Create `deploy/Dockerfile` — multi-stage build: uv install server package, copy GeoIP config, expose port 8000, entrypoint: alembic upgrade + uvicorn
+- [ ] T044 [P] [US5] Create `deploy/docker-compose.yml` — services: postgres (16-alpine, volume for data), server (build from Dockerfile, depends_on postgres, env from .env), nginx (reverse proxy, port 80/443), geoipupdate (MaxMind DB updates, shared volume with server)
+- [ ] T045 [P] [US5] Create `deploy/nginx.conf` — reverse proxy to server:8000, strip IP from access logs (custom log format replacing $remote_addr with "-"), HTTPS config placeholder
+- [ ] T046 [US5] Create `deploy/allowlist.yml` — sample allowlist with a few sensein projects, documented format
+- [ ] T047 [P] [US5] Create `deploy/geoipupdate.conf` — MaxMind GeoIP update config template with license key placeholder
+- [ ] T048 [US5] Create `.github/workflows/ci.yml` — on PR: checkout, uv setup, install deps, run ruff lint, run pytest (client tests + server tests with testcontainers), upload coverage; generate and commit `uv.lock`
+- [ ] T049 [US5] Create `.github/workflows/deploy.yml` — on push to main: build Docker image, push to registry, SSH deploy to AWS EC2 (or use docker context), run alembic migrations, restart services; secrets: AWS credentials, server host, MaxMind key
+- [ ] T050 [US5] Test Docker Compose deployment locally — `docker compose up`, verify all services healthy, make version check request, verify dashboard accessible
+- [ ] T051 [US5] Test GitHub Actions CI workflow — push branch, verify checks pass
 
 **Checkpoint**: Deployment fully automated. Self-hosted and AWS paths both working.
 
@@ -153,14 +164,14 @@
 
 **Purpose**: Code review, documentation, IP audit, end-to-end validation
 
-- [ ] T051 Code abstraction review — identify duplicated logic across server services and extract to shared utilities per constitution Principle V
-- [ ] T052 [P] IP audit — grep entire codebase and database schema for any IP storage or logging; verify nginx logs strip IPs; verify no IP in version_checks table; document audit results
-- [ ] T053 [P] Update `docs/vision.md` with final architectural direction and scope
-- [ ] T054 Update `docs/phase-log.md` with entries for all completed phases
-- [ ] T055 Update `docs/rebuild-spec.md` — comprehensive specification sufficient to rebuild from scratch per constitution Principle VI
-- [ ] T056 Run `quickstart.md` validation — follow every step in quickstart.md on a clean checkout, verify all commands succeed
-- [ ] T057 [P] Run full test suite (`uv run pytest`) and verify all tests pass
-- [ ] T058 Performance validation — load test with ~1,650 req/min sustained, verify <2s response, verify content-addressed dedup reduces row count as expected
+- [ ] T052 Code abstraction review — identify duplicated logic across server services and extract to shared utilities per constitution Principle V
+- [ ] T053 [P] IP audit — grep entire codebase and database schema for any IP storage or logging; verify nginx logs strip IPs; verify uvicorn logs strip IPs; verify no IP in version_checks table; document audit results
+- [ ] T054 [P] Update `docs/vision.md` with final architectural direction and scope
+- [ ] T055 Update `docs/phase-log.md` with entries for all completed phases
+- [ ] T056 Update `docs/rebuild-spec.md` — comprehensive specification sufficient to rebuild from scratch per constitution Principle VI
+- [ ] T057 Run `quickstart.md` validation — follow every step in quickstart.md on a clean checkout, verify all commands succeed
+- [ ] T058 [P] Run full test suite (`uv run pytest`) and verify all tests pass
+- [ ] T059 Performance validation — load test with ~1,650 req/min sustained, verify <2s response, verify content-addressed dedup reduces row count as expected, verify storage is at least 50% smaller than MongoDB equivalent (SC-003)
 
 ---
 

@@ -51,23 +51,23 @@
 
 ### Tests for User Story 1
 
-- [ ] T013 [P] [US1] Write contract test for `GET /projects/{owner}/{repo}` in `server/tests/contract/test_projects_api.py` — verify response shape matches contracts/api.md for 200, 404, 400 cases
-- [ ] T014 [P] [US1] Write integration test for end-to-end version check in `server/tests/integration/test_version_check.py` — start server with testcontainers PostgreSQL, make request, verify DB record has geolocation but no IP column
+- [x] T013 [P] [US1] Write contract test for `GET /projects/{owner}/{repo}` in `server/tests/contract/test_projects_api.py` — verify response shape matches contracts/api.md for 200, 404, 400 cases
+- [x] T014 [P] [US1] Write integration test for end-to-end version check in `server/tests/integration/test_version_check.py` — start server with testcontainers PostgreSQL, make request, verify DB record has geolocation but no IP column
 
 ### Implementation for User Story 1
 
-- [ ] T015 [P] [US1] Implement geolocation service in `server/src/etelemetry_server/services/geolocation.py` — load MaxMind GeoLite2 Reader at startup, `resolve(ip: str) -> GeoResult` returning city/region/country/coords, handle lookup failures (return "unknown")
-- [ ] T016 [P] [US1] Implement version checker service in `server/src/etelemetry_server/services/version_checker.py` — async GitHub API via httpx (releases then tags fallback), cache in `projects` table with TTL, fetch `.et` file for bad_versions, handle rate limiting gracefully
-- [ ] T017 [P] [US1] Implement usage recorder service in `server/src/etelemetry_server/services/usage_recorder.py` — content-addressed upsert: `INSERT INTO version_checks ... ON CONFLICT (composite_key) DO UPDATE SET count = count + 1`, compute time_bucket by truncating to hour
-- [ ] T018 [US1] Implement in-memory LRU cache in `server/src/etelemetry_server/services/version_checker.py` — cache recent version lookups in memory so the server can respond to version-check requests even when PostgreSQL is unreachable; populate on successful DB reads, serve from memory on DB failure
-- [ ] T019 [US1] Implement health route in `server/src/etelemetry_server/routes/health.py` — `GET /` returning `{"name": "etelemetry", "version": ...}`
-- [ ] T020 [US1] Implement projects route in `server/src/etelemetry_server/routes/projects.py` — `GET /projects/{owner}/{repo}` orchestrating: allowlist check → geolocation → usage record → version lookup → response; accept `?ci=` and `?v=` query params; disable uvicorn access log IP logging
-- [ ] T021 [P] [US1] Implement client `src/etelemetry/errors.py` — `BadVersionError(RuntimeError)`
-- [ ] T022 [P] [US1] Implement client `src/etelemetry/config.py` — `resolve_url(server_url=None)` with basic precedence: `ETELEMETRY_URL` env → hardcoded default; `NO_ET` check
-- [ ] T023 [US1] Implement client `src/etelemetry/client.py` — `get_project(repo, **kwargs)` and `check_available_version(project, version, lgr, raise_exception)` per contracts/api.md; use `requests` with 5s timeout; send `?ci=` and `?v=` params
-- [ ] T024 [US1] Implement client `src/etelemetry/__init__.py` — export `get_project`, `check_available_version`, `BadVersionError`, `__version__`
-- [ ] T025 [US1] Write client unit tests in `tests/unit/test_client.py` — mock server responses, verify outdated warning, bad version critical warning, `BadVersionError` raise, `NO_ET` disables requests
-- [ ] T026 [US1] Run contract and integration tests, verify all pass
+- [x] T015 [P] [US1] Implement geolocation service in `server/src/etelemetry_server/services/geolocation.py` — load MaxMind GeoLite2 Reader at startup, `resolve(ip: str) -> GeoResult` returning city/region/country/coords, handle lookup failures (return "unknown")
+- [x] T016 [P] [US1] Implement version checker service in `server/src/etelemetry_server/services/version_checker.py` — async GitHub API via httpx (releases then tags fallback), cache in `projects` table with TTL, fetch `.et` file for bad_versions, handle rate limiting gracefully
+- [x] T017 [P] [US1] Implement usage recorder service in `server/src/etelemetry_server/services/usage_recorder.py` — content-addressed upsert: `INSERT INTO version_checks ... ON CONFLICT (composite_key) DO UPDATE SET count = count + 1`, compute time_bucket by truncating to hour
+- [x] T018 [US1] Implement in-memory LRU cache in `server/src/etelemetry_server/services/version_checker.py` — cache recent version lookups in memory so the server can respond to version-check requests even when PostgreSQL is unreachable; populate on successful DB reads, serve from memory on DB failure
+- [x] T019 [US1] Implement health route in `server/src/etelemetry_server/routes/health.py` — `GET /` returning `{"name": "etelemetry", "version": ...}`
+- [x] T020 [US1] Implement projects route in `server/src/etelemetry_server/routes/projects.py` — `GET /projects/{owner}/{repo}` orchestrating: allowlist check → geolocation → usage record → version lookup → response; accept `?ci=` and `?v=` query params; disable uvicorn access log IP logging
+- [x] T021 [P] [US1] Implement client `src/etelemetry/errors.py` — `BadVersionError(RuntimeError)`
+- [x] T022 [P] [US1] Implement client `src/etelemetry/config.py` — `resolve_url(server_url=None)` with basic precedence: `ETELEMETRY_URL` env → hardcoded default; `NO_ET` check
+- [x] T023 [US1] Implement client `src/etelemetry/client.py` — `get_project(repo, **kwargs)` and `check_available_version(project, version, lgr, raise_exception)` per contracts/api.md; use `requests` with 5s timeout; send `?ci=` and `?v=` params
+- [x] T024 [US1] Implement client `src/etelemetry/__init__.py` — export `get_project`, `check_available_version`, `BadVersionError`, `__version__`
+- [x] T025 [US1] Write client unit tests in `tests/unit/test_client.py` — mock server responses, verify outdated warning, bad version critical warning, `BadVersionError` raise, `NO_ET` disables requests
+- [x] T026 [US1] Run contract and integration tests, verify all pass
 
 **Checkpoint**: Core version-check loop fully functional. Client and server independently testable.
 

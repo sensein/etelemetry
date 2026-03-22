@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import os
 
-_HARDCODED_URL = "https://etelemetry.sensein.group/"
+_HARDCODED_URL = "https://et.dandiproject.org/"
 
 #: Library authors can set this to point their package's clients at a
 #: custom etelemetry instance without requiring end-users to set an

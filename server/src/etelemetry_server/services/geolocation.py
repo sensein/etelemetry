@@ -71,7 +71,7 @@ class GeoLocator:
             )
         except Exception as exc:
             # Covers AddressNotFoundError, ValueError (bad IP), and others
-            logger.debug("Geolocation lookup failed for %s: %s", ip, exc)
+            logger.debug("Geolocation lookup failed: %s", type(exc).__name__)
             return _unknown_result()
 
     def close(self) -> None:

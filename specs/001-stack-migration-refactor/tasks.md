@@ -153,8 +153,8 @@
 - [x] T047 [P] [US5] Create `deploy/geoipupdate.conf` — MaxMind GeoIP update config template with license key placeholder
 - [x] T048 [US5] Create `.github/workflows/ci.yml` — on PR: checkout, uv setup, install deps, run ruff lint, run pytest (client tests + server tests with testcontainers), upload coverage; generate and commit `uv.lock`
 - [x] T049 [US5] Create `.github/workflows/deploy.yml` — on push to main: build Docker image, push to registry, SSH deploy to AWS EC2 (or use docker context), run alembic migrations, restart services; secrets: AWS credentials, server host, MaxMind key
-- [ ] T050 [US5] Test Docker Compose deployment locally — `docker compose up`, verify all services healthy, make version check request, verify dashboard accessible
-- [ ] T051 [US5] Test GitHub Actions CI workflow — push branch, verify checks pass
+- [x] T050 [US5] Test Docker Compose deployment locally — `docker compose up`, verify all services healthy, make version check request, verify dashboard accessible
+- [x] T051 [US5] Test GitHub Actions CI workflow — push branch, verify checks pass
 
 **Checkpoint**: Deployment fully automated. Self-hosted and AWS paths both working.
 
@@ -164,14 +164,14 @@
 
 **Purpose**: Code review, documentation, IP audit, end-to-end validation
 
-- [ ] T052 Code abstraction review — identify duplicated logic across server services and extract to shared utilities per constitution Principle V
-- [ ] T053 [P] IP audit — grep entire codebase and database schema for any IP storage or logging; verify nginx logs strip IPs; verify uvicorn logs strip IPs; verify no IP in version_checks table; document audit results
-- [ ] T054 [P] Update `docs/vision.md` with final architectural direction and scope
-- [ ] T055 Update `docs/phase-log.md` with entries for all completed phases
-- [ ] T056 Update `docs/rebuild-spec.md` — comprehensive specification sufficient to rebuild from scratch per constitution Principle VI
-- [ ] T057 Run `quickstart.md` validation — follow every step in quickstart.md on a clean checkout, verify all commands succeed
-- [ ] T058 [P] Run full test suite (`uv run pytest`) and verify all tests pass
-- [ ] T059 Performance validation — load test with ~1,650 req/min sustained, verify <2s response, verify content-addressed dedup reduces row count as expected, verify storage is at least 50% smaller than MongoDB equivalent (SC-003)
+- [x] T052 Code abstraction review — identify duplicated logic across server services and extract to shared utilities per constitution Principle V
+- [x] T053 [P] IP audit — grep entire codebase and database schema for any IP storage or logging; verify nginx logs strip IPs; verify uvicorn logs strip IPs; verify no IP in version_checks table; document audit results
+- [x] T054 [P] Update `docs/vision.md` with final architectural direction and scope
+- [x] T055 Update `docs/phase-log.md` with entries for all completed phases
+- [x] T056 Update `docs/rebuild-spec.md` — comprehensive specification sufficient to rebuild from scratch per constitution Principle VI
+- [x] T057 Run `quickstart.md` validation — follow every step in quickstart.md on a clean checkout, verify all commands succeed
+- [x] T058 [P] Run full test suite (`uv run pytest`) and verify all tests pass
+- [x] T059 Performance validation — load test with ~1,650 req/min sustained, verify <2s response, verify content-addressed dedup reduces row count as expected, verify storage is at least 50% smaller than MongoDB equivalent (SC-003)
 
 ---
 

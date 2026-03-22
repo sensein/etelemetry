@@ -1,0 +1,66 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: et-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-etelemetry}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: ${POSTGRES_DB:-etelemetry}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-etelemetry}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  geoipupdate:
+    image: ghcr.io/maxmind/geoipupdate:latest
+    container_name: et-geoipupdate
+    environment:
+      GEOIPUPDATE_ACCOUNT_ID: ${MAXMIND_ACCOUNT_ID:?Set MAXMIND_ACCOUNT_ID in .env}
+      GEOIPUPDATE_LICENSE_KEY: ${MAXMIND_LICENSE_KEY:?Set MAXMIND_LICENSE_KEY in .env}
+      GEOIPUPDATE_EDITION_IDS: GeoLite2-City
+      GEOIPUPDATE_FREQUENCY: 168  # weekly (hours)
+    volumes:
+      - geoip:/usr/share/GeoIP
+    restart: unless-stopped
+
+  server:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    container_name: et-server
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-etelemetry}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-etelemetry}
+      MAXMIND_DB_PATH: /data/GeoLite2-City.mmdb
+      ALLOWLIST_PATH: /config/allowlist.yml
+      CACHE_TTL_SECONDS: ${CACHE_TTL_SECONDS:-21600}
+      TIME_BUCKET_HOURS: ${TIME_BUCKET_HOURS:-1}
+      GITHUB_TOKEN: ${GITHUB_TOKEN:-}
+    volumes:
+      - geoip:/data:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:alpine
+    container_name: et-nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - server
+    restart: always
+
+volumes:
+  pgdata:
+  geoip:

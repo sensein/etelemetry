@@ -1,0 +1,55 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+      - run: uv pip install --system ruff
+      - run: ruff check src/ server/src/ tools/ tests/ server/tests/
+
+  test-client:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: uv pip install --system -e ".[dev]"
+      - run: pytest tests/ -v --tb=short
+
+  test-server:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: etelemetry
+          POSTGRES_PASSWORD: testpassword
+          POSTGRES_DB: etelemetry_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgresql+asyncpg://etelemetry:testpassword@localhost:5432/etelemetry_test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+        with:
+          python-version: "3.11"
+      - run: uv pip install --system -e "./server[dev]"
+      - run: pytest server/tests/ -v --tb=short -k "not test_migration"

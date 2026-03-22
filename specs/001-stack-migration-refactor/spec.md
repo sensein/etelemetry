@@ -147,11 +147,12 @@ sufficient color contrast).
 
 ---
 
-### User Story 5 - Self-Hosted Deployment (Priority: P5)
+### User Story 5 - Self-Hosted & AWS Deployment (Priority: P5)
 
-An organization deploys their own etelemetry instance using Docker Compose.
-They configure their domain, bring up the service, and it is ready to accept
-version checks from clients.
+An organization deploys their own etelemetry instance using Docker Compose
+locally or on AWS. The primary production deployment on AWS is maintainable
+via a GitHub Actions workflow that automates infrastructure updates on push.
+Others can self-host with Docker Compose and their own domain.
 
 **Why this priority**: Self-hosting enables adoption beyond the original
 maintainers but depends on the server and client being functional first.
@@ -159,7 +160,8 @@ maintainers but depends on the server and client being functional first.
 **Independent Test**: Follow the deployment documentation to bring up an
 instance using only Docker Compose on a fresh machine. Register a test
 project, make a version check from a client, and verify the dashboard
-displays the result.
+displays the result. For AWS, verify the GitHub Actions workflow deploys
+successfully.
 
 **Acceptance Scenarios**:
 
@@ -169,6 +171,10 @@ displays the result.
 
 2. **Given** a self-hosted instance, **When** a client is configured to point
    at it, **Then** version checks succeed and data appears in the dashboard.
+
+3. **Given** the etelemetry repository on GitHub, **When** a maintainer pushes
+   to the deployment branch, **Then** a GitHub Actions workflow deploys the
+   updated service to AWS automatically.
 
 ---
 
@@ -190,6 +196,9 @@ displays the result.
   deduplicate based on project + timestamp + location and log the duplicates.
 - What happens when a project has no `.et` file? The server MUST return an
   empty bad_versions list rather than an error.
+- What happens when a client requests a project not on the allowlist? The
+  server MUST reject the request with a clear "project not tracked" response
+  and MUST NOT record the event or make upstream API calls for it.
 
 ## Requirements *(mandatory)*
 
@@ -202,9 +211,11 @@ displays the result.
   project's source repository (GitHub releases, then tags as fallback).
 - **FR-003**: The system MUST cache version lookups to avoid excessive
   upstream API calls, with a configurable cache duration (default: 6 hours).
-- **FR-004**: The system MUST record each version-check event with: project
-  identifier, checked version, timestamp, CI environment flag, and
-  city/state-level geolocation.
+- **FR-004**: The system MUST record version-check events using content-
+  addressed deduplication: pings with the same project identifier, version,
+  geolocation, and CI flag within the same time-bucket (default: 1 hour)
+  MUST increment a counter on an existing record rather than creating a
+  new row.
 - **FR-005**: The system MUST NOT persist IP addresses in the database or
   in application logs. IP addresses MUST be used only transiently for
   geolocation resolution and then discarded.
@@ -239,15 +250,29 @@ displays the result.
   coarsens over time (e.g., daily for recent data, weekly as the standard
   granularity, monthly for older data). The age thresholds for each tier
   MUST be configurable.
+- **FR-018**: The system MUST maintain an allowlist of tracked repositories
+  defined in a configuration file (YAML or JSON) in the deployment. The
+  server MUST reload the allowlist on restart or when signaled (e.g.,
+  SIGHUP). Version-check requests for projects not on the allowlist MUST
+  be rejected with an appropriate status code.
+- **FR-019**: Ingress and egress payloads MUST be compacted to minimize
+  bytes transferred (e.g., HTTP compression, minimal JSON field names,
+  omitting null fields).
+- **FR-020**: The production deployment MUST be maintainable on AWS and
+  deployable via a GitHub Actions workflow or action, enabling automated
+  infrastructure updates on push.
 
 ### Key Entities
 
-- **Project**: A software project tracked by etelemetry. Identified by
-  owner/repo (e.g., "nipy/nipype"). Has a latest known version, a list of
-  bad versions, and a cache timestamp.
-- **VersionCheck**: A single check-in event. Captures project identifier,
-  version reported by client, timestamp, CI flag, and resolved geolocation
-  (city, state/region, country). No IP address.
+- **Project**: A software project on the server's allowlist, tracked by
+  etelemetry. Identified by owner/repo (e.g., "nipy/nipype"). Has a latest
+  known version, a list of bad versions, a cache timestamp, and an active
+  flag. Only allowlisted projects are served and recorded.
+- **VersionCheck**: A deduplicated usage record keyed by content address:
+  project identifier + version + geolocation (city, state/region, country)
+  + CI flag + time-bucket (default: 1-hour window). Each matching ping
+  increments a counter rather than creating a new row. No IP address is
+  stored.
 - **GeoLocation**: City/state-level location derived from an IP address at
   request time. Stored as city, region, country, and approximate coordinates.
   Never linked to an IP.
@@ -270,6 +295,8 @@ displays the result.
   to be determined; the old domain will redirect during a transition period.
 - The dashboard does not require authentication for read access to aggregated
   statistics (no individual-user data is exposed).
+- Current production load is approximately 1 million pings per week or more,
+  with many repeated pings from the same project+version+location.
 - Individual version-check records are retained indefinitely (IPs are never
   stored). Aggregation granularity coarsens over time (daily → weekly →
   monthly) to balance query performance with storage efficiency. Weekly is
@@ -286,6 +313,18 @@ displays the result.
 - Q: What type of geographic visualization for the dashboard? → A: Interactive
   map with drill-down (country → region → city) plus a summary table with
   precise counts.
+- Q: How should repeated identical pings be handled at ~1M/week scale? → A:
+  Content-addressed deduplication with hourly time-buckets. Same project +
+  version + location + CI flag within the same hour increments a counter.
+- (Direct integration) Scale: ~1M pings/week, many from same location.
+  Updated SC-009, added scale assumption.
+- (Direct integration) Added FR-018: repository allowlist to control which
+  projects are tracked.
+- (Direct integration) Added FR-019: compact ingress/egress payloads.
+- (Direct integration) Added FR-020: AWS deployment via GitHub Actions
+  workflow. Updated User Story 5.
+- Q: How is the project allowlist managed? → A: Configuration file
+  (YAML/JSON) in the deployment, reloaded on restart or signal.
 
 ## Success Criteria *(mandatory)*
 
@@ -308,5 +347,6 @@ displays the result.
 - **SC-008**: All existing client integrations (`get_project`,
   `check_available_version`, `BadVersionError`) continue to work without
   code changes in downstream projects (backward compatibility).
-- **SC-009**: The system handles at least 100 concurrent version-check
-  requests without degradation.
+- **SC-009**: The system handles at least 1 million version-check requests
+  per week (~1,650/minute sustained) without degradation, with burst
+  capacity for peak periods.

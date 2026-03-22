@@ -121,18 +121,18 @@
 
 > **NOTE: Write these tests FIRST, ensure they FAIL before implementation**
 
-- [ ] T034 [P] [US4] Write dashboard contract tests in `server/tests/contract/test_dashboard_api.py` — verify response shapes for stats, geo, and projects endpoints per contracts/api.md
-- [ ] T035 [P] [US4] Write dashboard integration test in `server/tests/integration/test_dashboard.py` — seed DB with 12+ months of sample data, verify HTML pages render, API returns correct aggregated data, page loads within 3 seconds (SC-005)
+- [x] T034 [P] [US4] Write dashboard contract tests in `server/tests/contract/test_dashboard_api.py` — verify response shapes for stats, geo, and projects endpoints per contracts/api.md
+- [x] T035 [P] [US4] Write dashboard integration test in `server/tests/integration/test_dashboard.py` — seed DB with 12+ months of sample data, verify HTML pages render, API returns correct aggregated data, page loads within 3 seconds (SC-005)
 
 ### Implementation for User Story 4
 
-- [ ] T036 [US4] Implement aggregation service in `server/src/etelemetry_server/services/aggregation.py` — tiered rollup job: compute daily/weekly/monthly aggregates from version_checks; configurable age thresholds; callable as background task or CLI command
-- [ ] T037 [US4] Implement dashboard API routes in `server/src/etelemetry_server/routes/dashboard.py` — `GET /dashboard/api/projects` (project list with counts), `GET /dashboard/api/stats/{owner}/{repo}` (stats with time range + granularity params), `GET /dashboard/api/geo/{owner}/{repo}` (GeoJSON for Leaflet)
-- [ ] T038 [P] [US4] Create dashboard base template in `server/src/etelemetry_server/dashboard/templates/base.html` — HTML skeleton with htmx (CDN), Leaflet.js (CDN), CSS for accessibility (skip links, focus indicators, sufficient contrast, responsive layout)
-- [ ] T039 [US4] Create project list page template in `server/src/etelemetry_server/dashboard/templates/projects.html` — list all tracked projects with total check counts, link to detail; `GET /dashboard/` route serves this
-- [ ] T040 [US4] Create project detail page template in `server/src/etelemetry_server/dashboard/templates/project_detail.html` — interactive Leaflet map (drill-down country→region→city via GeoJSON endpoint), summary table, version distribution chart, timeline; time-range filter via htmx partial updates
-- [ ] T041 [US4] Add static JS in `server/src/etelemetry_server/dashboard/static/dashboard.js` — Leaflet map initialization, GeoJSON layer with click drill-down, htmx event handlers for filter updates
-- [ ] T042 [US4] Run accessibility audit — verify WCAG 2.1 AA compliance: keyboard navigation, screen reader landmarks, color contrast, focus management; document results
+- [x] T036 [US4] Implement aggregation service in `server/src/etelemetry_server/services/aggregation.py` — tiered rollup job: compute daily/weekly/monthly aggregates from version_checks; configurable age thresholds; callable as background task or CLI command
+- [x] T037 [US4] Implement dashboard API routes in `server/src/etelemetry_server/routes/dashboard.py` — `GET /dashboard/api/projects` (project list with counts), `GET /dashboard/api/stats/{owner}/{repo}` (stats with time range + granularity params), `GET /dashboard/api/geo/{owner}/{repo}` (GeoJSON for Leaflet)
+- [x] T038 [P] [US4] Create dashboard base template in `server/src/etelemetry_server/dashboard/templates/base.html` — HTML skeleton with htmx (CDN), Leaflet.js (CDN), CSS for accessibility (skip links, focus indicators, sufficient contrast, responsive layout)
+- [x] T039 [US4] Create project list page template in `server/src/etelemetry_server/dashboard/templates/projects.html` — list all tracked projects with total check counts, link to detail; `GET /dashboard/` route serves this
+- [x] T040 [US4] Create project detail page template in `server/src/etelemetry_server/dashboard/templates/project_detail.html` — interactive Leaflet map (drill-down country→region→city via GeoJSON endpoint), summary table, version distribution chart, timeline; time-range filter via htmx partial updates
+- [x] T041 [US4] Add static JS in `server/src/etelemetry_server/dashboard/static/dashboard.js` — Leaflet map initialization, GeoJSON layer with click drill-down, htmx event handlers for filter updates
+- [x] T042 [US4] Run accessibility audit — verify WCAG 2.1 AA compliance: keyboard navigation, screen reader landmarks, color contrast, focus management; document results
 
 **Checkpoint**: Dashboard fully functional with map, table, filtering, and accessibility.
 
@@ -146,13 +146,13 @@
 
 ### Implementation for User Story 5
 
-- [ ] T043 [US5] Create `deploy/Dockerfile` — multi-stage build: uv install server package, copy GeoIP config, expose port 8000, entrypoint: alembic upgrade + uvicorn
-- [ ] T044 [P] [US5] Create `deploy/docker-compose.yml` — services: postgres (16-alpine, volume for data), server (build from Dockerfile, depends_on postgres, env from .env), nginx (reverse proxy, port 80/443), geoipupdate (MaxMind DB updates, shared volume with server)
-- [ ] T045 [P] [US5] Create `deploy/nginx.conf` — reverse proxy to server:8000, strip IP from access logs (custom log format replacing $remote_addr with "-"), HTTPS config placeholder
-- [ ] T046 [US5] Create `deploy/allowlist.yml` — sample allowlist with a few sensein projects, documented format
-- [ ] T047 [P] [US5] Create `deploy/geoipupdate.conf` — MaxMind GeoIP update config template with license key placeholder
-- [ ] T048 [US5] Create `.github/workflows/ci.yml` — on PR: checkout, uv setup, install deps, run ruff lint, run pytest (client tests + server tests with testcontainers), upload coverage; generate and commit `uv.lock`
-- [ ] T049 [US5] Create `.github/workflows/deploy.yml` — on push to main: build Docker image, push to registry, SSH deploy to AWS EC2 (or use docker context), run alembic migrations, restart services; secrets: AWS credentials, server host, MaxMind key
+- [x] T043 [US5] Create `deploy/Dockerfile` — multi-stage build: uv install server package, copy GeoIP config, expose port 8000, entrypoint: alembic upgrade + uvicorn
+- [x] T044 [P] [US5] Create `deploy/docker-compose.yml` — services: postgres (16-alpine, volume for data), server (build from Dockerfile, depends_on postgres, env from .env), nginx (reverse proxy, port 80/443), geoipupdate (MaxMind DB updates, shared volume with server)
+- [x] T045 [P] [US5] Create `deploy/nginx.conf` — reverse proxy to server:8000, strip IP from access logs (custom log format replacing $remote_addr with "-"), HTTPS config placeholder
+- [x] T046 [US5] Create `deploy/allowlist.yml` — sample allowlist with a few sensein projects, documented format
+- [x] T047 [P] [US5] Create `deploy/geoipupdate.conf` — MaxMind GeoIP update config template with license key placeholder
+- [x] T048 [US5] Create `.github/workflows/ci.yml` — on PR: checkout, uv setup, install deps, run ruff lint, run pytest (client tests + server tests with testcontainers), upload coverage; generate and commit `uv.lock`
+- [x] T049 [US5] Create `.github/workflows/deploy.yml` — on push to main: build Docker image, push to registry, SSH deploy to AWS EC2 (or use docker context), run alembic migrations, restart services; secrets: AWS credentials, server host, MaxMind key
 - [ ] T050 [US5] Test Docker Compose deployment locally — `docker compose up`, verify all services healthy, make version check request, verify dashboard accessible
 - [ ] T051 [US5] Test GitHub Actions CI workflow — push branch, verify checks pass
 

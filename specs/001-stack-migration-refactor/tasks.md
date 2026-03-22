@@ -81,10 +81,10 @@
 
 ### Implementation for User Story 2
 
-- [ ] T027 [US2] Update `src/etelemetry/config.py` — add `default_url` module-level attribute, add `server_url` param support to `resolve_url()`, document full precedence chain (param → env → default_url → hardcoded)
-- [ ] T028 [US2] Update `src/etelemetry/client.py` — add `server_url` optional parameter to `get_project()` and `check_available_version()`, pass through to `resolve_url()`
-- [ ] T029 [US2] Write tests in `tests/unit/test_config.py` — verify precedence: param > env var > `config.default_url` > hardcoded default; verify `NO_ET` short-circuits
-- [ ] T030 [US2] Write integration test in `tests/integration/test_custom_url.py` — start two mock servers, verify client routes to correct one based on config
+- [x] T027 [US2] Update `src/etelemetry/config.py` — add `default_url` module-level attribute, add `server_url` param support to `resolve_url()`, document full precedence chain (param → env → default_url → hardcoded)
+- [x] T028 [US2] Update `src/etelemetry/client.py` — add `server_url` optional parameter to `get_project()` and `check_available_version()`, pass through to `resolve_url()`
+- [x] T029 [US2] Write tests in `tests/unit/test_config.py` — verify precedence: param > env var > `config.default_url` > hardcoded default; verify `NO_ET` short-circuits
+- [x] T030 [US2] Write integration test in `tests/integration/test_custom_url.py` — start two mock servers, verify client routes to correct one based on config
 
 **Checkpoint**: Client configurable URL working. Backward compatible — no existing code breaks.
 

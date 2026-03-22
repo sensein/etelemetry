@@ -48,13 +48,16 @@ def _etrequest(endpoint: str, method: str = "get", **kwargs) -> dict:
     return res.json()
 
 
-def get_project(repo: str, **rargs) -> dict | None:
+def get_project(repo: str, *, server_url: str | None = None, **rargs) -> dict | None:
     """Fetch latest version info from the etelemetry server.
 
     Parameters
     ----------
     repo : str
         GitHub repository as ``<owner>/<project>``.
+    server_url : str or None
+        Explicit server URL (highest precedence). See
+        :func:`etelemetry.config.resolve_url` for the full chain.
     **rargs
         Additional keyword arguments passed to ``requests.request``.
 
@@ -76,7 +79,7 @@ def get_project(repo: str, **rargs) -> dict | None:
     if "/" not in repo:
         raise ValueError("Invalid repository — expected 'owner/project' format")
 
-    base_url = resolve_url()
+    base_url = resolve_url(server_url=server_url)
     if base_url is None:
         return None
 
@@ -93,6 +96,8 @@ def check_available_version(
     version: str,
     lgr: logging.Logger | None = None,
     raise_exception: bool = False,
+    *,
+    server_url: str | None = None,
 ) -> dict | None:
     """Check and report if a newer version of a project is available.
 
@@ -124,7 +129,7 @@ def check_available_version(
     latest = {"version": "Unknown", "bad_versions": []}
     ret = None
     try:
-        ret = get_project(project)
+        ret = get_project(project, server_url=server_url)
     except Exception as e:
         lgr.debug("Could not check %s for version updates: %s", project, e)
         return None

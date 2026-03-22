@@ -17,11 +17,11 @@
 
 **Purpose**: Monorepo initialization, tooling, and project skeleton
 
-- [ ] T001 Create root `pyproject.toml` for client package `etelemetry` with dependencies: `requests`, `packaging`, `ci-info`; dev extras: `pytest`, `pytest-asyncio`, `httpx`, `ruff`; configure `uv` as build backend
-- [ ] T002 Create `server/pyproject.toml` for server package `etelemetry-server` with dependencies: `fastapi`, `uvicorn[standard]`, `sqlalchemy[asyncio]`, `asyncpg`, `alembic`, `httpx`, `geoip2`, `jinja2`, `starlette-compress`, `pydantic-settings`, `pyyaml`; dev extras: `pytest`, `testcontainers`
-- [ ] T003 [P] Create `.gitignore` (Python, .env, __pycache__, *.mmdb, node_modules) and `deploy/.env.example` with placeholder keys (POSTGRES_PASSWORD, MAXMIND_LICENSE_KEY, SECRET_KEY)
-- [ ] T004 [P] Create skeleton `docs/vision.md`, `docs/phase-log.md`, `docs/rebuild-spec.md` with initial content per constitution (Principles VI, VII)
-- [ ] T005 [P] Create empty package directories: `src/etelemetry/`, `server/src/etelemetry_server/`, `server/src/etelemetry_server/routes/`, `server/src/etelemetry_server/services/`, `server/src/etelemetry_server/dashboard/templates/`, `server/src/etelemetry_server/dashboard/static/`, `tools/`, `tests/unit/`, `tests/integration/`, `tests/contract/`, `server/tests/unit/`, `server/tests/integration/`, `server/tests/contract/`
+- [x] T001 Create root `pyproject.toml` for client package `etelemetry` with dependencies: `requests`, `packaging`, `ci-info`; dev extras: `pytest`, `pytest-asyncio`, `httpx`, `ruff`; configure `uv` as build backend
+- [x] T002 Create `server/pyproject.toml` for server package `etelemetry-server` with dependencies: `fastapi`, `uvicorn[standard]`, `sqlalchemy[asyncio]`, `asyncpg`, `alembic`, `httpx`, `geoip2`, `jinja2`, `starlette-compress`, `pydantic-settings`, `pyyaml`; dev extras: `pytest`, `testcontainers`
+- [x] T003 [P] Create `.gitignore` (Python, .env, __pycache__, *.mmdb, node_modules) and `deploy/.env.example` with placeholder keys (POSTGRES_PASSWORD, MAXMIND_LICENSE_KEY, SECRET_KEY)
+- [x] T004 [P] Create skeleton `docs/vision.md`, `docs/phase-log.md`, `docs/rebuild-spec.md` with initial content per constitution (Principles VI, VII)
+- [x] T005 [P] Create empty package directories: `src/etelemetry/`, `server/src/etelemetry_server/`, `server/src/etelemetry_server/routes/`, `server/src/etelemetry_server/services/`, `server/src/etelemetry_server/dashboard/templates/`, `server/src/etelemetry_server/dashboard/static/`, `tools/`, `tests/unit/`, `tests/integration/`, `tests/contract/`, `server/tests/unit/`, `server/tests/integration/`, `server/tests/contract/`
 
 ---
 

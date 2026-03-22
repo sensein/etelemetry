@@ -29,7 +29,7 @@ async def get_project_version(
     session: AsyncSession = Depends(get_db),
     ci: bool = False,
     v: str | None = None,
-) -> JSONResponse | dict:
+):
     """Return the latest version and bad versions for a project.
 
     Query parameters

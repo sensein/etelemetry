@@ -133,7 +133,9 @@ sufficient color contrast).
 
 1. **Given** usage data for project "org/tool", **When** a maintainer visits
    the dashboard and selects "org/tool", **Then** they see total checks,
-   version distribution, and geographic breakdown.
+   version distribution, and an interactive map showing geographic
+   distribution with drill-down capability (country → region → city)
+   alongside a summary table with precise counts.
 
 2. **Given** a dashboard with data, **When** a user selects a time range
    (e.g., last 7 days, last 30 days, custom range), **Then** all displayed
@@ -216,8 +218,9 @@ displays the result.
   the existing public API (`get_project`, `check_available_version`,
   `BadVersionError`).
 - **FR-009**: The system MUST provide a web dashboard showing per-project
-  usage counts, version distribution, and geographic distribution with
-  time-period filtering.
+  usage counts, version distribution, and geographic distribution via an
+  interactive map with drill-down (country → region → city) and a
+  companion summary table, with time-period filtering.
 - **FR-010**: The dashboard MUST meet WCAG 2.1 AA accessibility standards.
 - **FR-011**: The system MUST provide a migration tool that imports data
   from the existing MongoDB instance, stripping IP addresses during import.
@@ -232,6 +235,10 @@ displays the result.
   environment and include that flag in the usage record.
 - **FR-016**: Web server access logs MUST strip or omit IP addresses before
   writing to disk.
+- **FR-017**: The system MUST support tiered aggregation granularity that
+  coarsens over time (e.g., daily for recent data, weekly as the standard
+  granularity, monthly for older data). The age thresholds for each tier
+  MUST be configurable.
 
 ### Key Entities
 
@@ -245,7 +252,10 @@ displays the result.
   request time. Stored as city, region, country, and approximate coordinates.
   Never linked to an IP.
 - **UsageAggregate**: Pre-computed summary of version checks grouped by
-  project, time period (day/week/month), version, and location. Used by the
+  project, time period, version, and location. Aggregation granularity
+  coarsens over time: daily for recent data, weekly as the standard
+  granularity, and monthly for older data. The specific age thresholds
+  for transitioning between granularities are configurable. Used by the
   dashboard for efficient querying.
 
 ### Assumptions
@@ -260,6 +270,22 @@ displays the result.
   to be determined; the old domain will redirect during a transition period.
 - The dashboard does not require authentication for read access to aggregated
   statistics (no individual-user data is exposed).
+- Individual version-check records are retained indefinitely (IPs are never
+  stored). Aggregation granularity coarsens over time (daily → weekly →
+  monthly) to balance query performance with storage efficiency. Weekly is
+  the standard useful granularity.
+
+## Clarifications
+
+### Session 2026-03-22
+
+- Q: What is the data retention policy for version-check records? → A: Keep
+  all records indefinitely (only IPs are discarded). Introduce tiered
+  aggregation granularity that coarsens over time; weekly is the useful
+  baseline granularity.
+- Q: What type of geographic visualization for the dashboard? → A: Interactive
+  map with drill-down (country → region → city) plus a summary table with
+  precise counts.
 
 ## Success Criteria *(mandatory)*
 

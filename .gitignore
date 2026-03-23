@@ -21,7 +21,7 @@ uv.lock
 !.env.example
 !deploy/.env.example
 
-# MaxMind GeoIP databases and config (contains license key)
+# GeoIP databases and config (MaxMind + DB-IP)
 *.mmdb
 GeoIP.conf
 

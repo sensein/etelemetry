@@ -21,7 +21,7 @@ import logging
 import sys
 from typing import Any
 
-from sqlalchemy import create_engine, select, func
+from sqlalchemy import create_engine, func, select
 from sqlalchemy.orm import Session
 
 # Ensure the server package is importable when running from the repo root.

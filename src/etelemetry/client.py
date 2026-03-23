@@ -23,7 +23,7 @@ def _etrequest(endpoint: str, method: str = "get", **kwargs) -> dict:
 
     Lazy-imports ``requests`` to avoid penalizing startup time.
     """
-    from requests import request, ConnectionError, ReadTimeout
+    from requests import ConnectionError, ReadTimeout, request
 
     if kwargs.get("timeout") is None:
         kwargs["timeout"] = 5

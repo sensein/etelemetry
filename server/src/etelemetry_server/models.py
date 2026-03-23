@@ -6,6 +6,7 @@ import datetime
 from typing import Optional
 
 from sqlalchemy import (
+    JSON,
     BigInteger,
     Boolean,
     Date,
@@ -14,7 +15,6 @@ from sqlalchemy import (
     ForeignKey,
     Index,
     Integer,
-    JSON,
     String,
     UniqueConstraint,
     func,

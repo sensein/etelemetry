@@ -3,13 +3,15 @@
 from __future__ import annotations
 
 import logging
-import os
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
 import etelemetry
-from etelemetry.client import _available_version_checked, check_available_version, get_project
+from etelemetry.client import (
+    check_available_version,
+    get_project,
+)
 from etelemetry.errors import BadVersionError
 
 
@@ -67,7 +69,7 @@ class TestCheckAvailableVersion:
     def test_critical_on_bad_version(self, mock_gp, caplog):
         mock_gp.return_value = {"version": "2.0.0", "bad_versions": ["1.0.0"]}
         with caplog.at_level(logging.CRITICAL, logger="et-client"):
-            result = check_available_version("owner/repo", "1.0.0")
+            check_available_version("owner/repo", "1.0.0")
         assert "critical bug" in caplog.text.lower()
 
     @patch("etelemetry.client.get_project")

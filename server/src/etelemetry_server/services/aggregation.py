@@ -8,13 +8,11 @@ from __future__ import annotations
 
 import datetime
 import logging
-from typing import Optional
 
-from sqlalchemy import delete, func, select, text
-from sqlalchemy.dialects import postgresql
+from sqlalchemy import delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from etelemetry_server.models import Project, UsageAggregate, VersionCheck
+from etelemetry_server.models import UsageAggregate, VersionCheck
 
 logger = logging.getLogger(__name__)
 

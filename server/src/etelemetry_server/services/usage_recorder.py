@@ -5,7 +5,6 @@ from __future__ import annotations
 import logging
 from datetime import datetime, timezone
 
-from sqlalchemy import insert
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 

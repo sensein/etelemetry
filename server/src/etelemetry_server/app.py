@@ -7,9 +7,8 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import AsyncGenerator
 
-from fastapi import FastAPI
-
 import httpx
+from fastapi import FastAPI
 
 from etelemetry_server.allowlist import load_allowlist, sync_allowlist_to_db
 from etelemetry_server.db import async_session_factory, engine, init_db
@@ -109,9 +108,23 @@ def create_app() -> FastAPI:
         logger.debug("projects router not yet available")
 
     try:
-        from etelemetry_server.routes.dashboard import router as dashboard_router
+        from etelemetry_server.routes.dashboard import (
+            STATIC_DIR,
+        )
+        from etelemetry_server.routes.dashboard import (
+            router as dashboard_router,
+        )
 
         app.include_router(dashboard_router)
+
+        from fastapi.staticfiles import StaticFiles
+
+        if STATIC_DIR.is_dir():
+            app.mount(
+                "/dashboard/static",
+                StaticFiles(directory=str(STATIC_DIR)),
+                name="dashboard_static",
+            )
     except ImportError:
         logger.debug("dashboard router not yet available")
 

@@ -12,7 +12,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from etelemetry_server.db import get_db
 from etelemetry_server.models import Project
-from etelemetry_server.services.geolocation import GeoLocator, GeoResult, _unknown_result
+from etelemetry_server.services.geolocation import (
+    GeoLocator,
+    _unknown_result,
+)
 from etelemetry_server.services.usage_recorder import record_usage
 from etelemetry_server.services.version_checker import VersionChecker
 
@@ -109,7 +112,10 @@ async def get_project_version(
         logger.warning(
             "Failed to get version info for %s/%s", owner, repo, exc_info=True
         )
-        version_info = {"version": project.latest_version, "bad_versions": project.bad_versions or []}
+        version_info = {
+            "version": project.latest_version,
+            "bad_versions": project.bad_versions or [],
+        }
 
     return {
         "version": version_info.get("version"),

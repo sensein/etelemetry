@@ -14,7 +14,7 @@ from sqlalchemy import distinct, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from etelemetry_server.db import get_db
-from etelemetry_server.models import Project, UsageAggregate, VersionCheck
+from etelemetry_server.models import Project, VersionCheck
 
 logger = logging.getLogger(__name__)
 

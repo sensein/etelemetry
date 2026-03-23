@@ -53,3 +53,19 @@ jobs:
           python-version: "3.11"
       - run: uv pip install --system -e "./server[dev]"
       - run: pytest server/tests/ -v --tb=short -k "not test_migration"
+
+  validate-infra:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: opentofu/setup-opentofu@v1
+      - name: Validate OpenTofu
+        working-directory: infra
+        run: |
+          tofu init -backend=false
+          tofu validate
+          tofu fmt -check -recursive
+      - name: Run IAM policy tests
+        run: |
+          pip install pytest
+          pytest infra/tests/test_iam_policy.py -v

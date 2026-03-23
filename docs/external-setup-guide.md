@@ -29,21 +29,18 @@ pre-releases when `--pre` is passed or an exact version is pinned).
 
 ### 1.3 Repository Secrets for AWS Deployment
 
-Go to **Settings → Secrets and variables → Actions → New repository secret**:
+No AWS secrets are needed — the deploy workflow authenticates via OIDC
+(no long-lived access keys). See `docs/bootstrap.md` for the full
+infrastructure setup.
 
-| Secret | Value | Description |
-|--------|-------|-------------|
-| `AWS_SSH_PRIVATE_KEY` | Contents of the EC2 SSH private key file | Used by deploy workflow to SSH into the server |
-| `AWS_SERVER_HOST` | `et.dandiproject.org` or EC2 public IP | SSH target for deployment |
-| `AWS_SERVER_USER` | `ubuntu` (or your EC2 user) | SSH username |
-
-### 1.4 Repository Variables (optional)
+### 1.3 Repository Variables
 
 Go to **Settings → Secrets and variables → Actions → Variables**:
 
 | Variable | Value | Description |
 |----------|-------|-------------|
-| `DEPLOY_ENABLED` | `true` | Set to `false` to disable auto-deploy |
+| `AWS_DEPLOY_ROLE_ARN` | `arn:aws:iam::ACCOUNT_ID:role/etelemetry-deploy` | From `tofu output deploy_role_arn` |
+| `AWS_REGION` | `us-east-1` | AWS region for deployment |
 
 ---
 

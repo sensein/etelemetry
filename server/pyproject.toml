@@ -6,7 +6,7 @@ build-backend = "hatchling.build"
 name = "etelemetry-server"
 version = "2.0.0"
 description = "etelemetry server — version check telemetry service"
-readme = "../README.md"
+readme = {text = "etelemetry server — version check telemetry service", content-type = "text/plain"}
 license = "Apache-2.0"
 requires-python = ">=3.11"
 dependencies = [

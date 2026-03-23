@@ -6,6 +6,9 @@ on:
   push:
     branches: [main]
 
+env:
+  SETUPTOOLS_SCM_PRETEND_VERSION: "0.0.0.dev0"
+
 jobs:
   lint:
     runs-on: ubuntu-latest
@@ -21,6 +24,8 @@ jobs:
         python-version: ["3.10", "3.11", "3.12", "3.13"]
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: astral-sh/setup-uv@v4
       - run: uv python install ${{ matrix.python-version }}
       - run: uv run --python ${{ matrix.python-version }} pytest tests/unit/ -v --tb=short
@@ -45,6 +50,8 @@ jobs:
       DATABASE_URL: postgresql+asyncpg://etelemetry:testpassword@localhost:5432/etelemetry_test
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: astral-sh/setup-uv@v4
       - run: uv python install 3.11
       - run: uv run --python 3.11 --directory server pytest server/tests/unit/ -v --tb=short
@@ -54,6 +61,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: opentofu/setup-opentofu@v1
+      - uses: astral-sh/setup-uv@v4
       - name: Validate OpenTofu
         working-directory: infra
         run: |

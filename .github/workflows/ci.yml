@@ -69,4 +69,4 @@ jobs:
           tofu validate
           tofu fmt -check -recursive || echo "::warning::OpenTofu files need formatting (run 'tofu fmt -recursive' in infra/)"
       - name: Run IAM policy tests
-        run: uv run pytest infra/tests/test_iam_policy.py -v
+        run: uv run --with pytest pytest infra/tests/test_iam_policy.py -v

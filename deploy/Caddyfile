@@ -1,0 +1,24 @@
+{
+	# Global options
+	log {
+		output stdout
+		format json
+		# IP addresses are excluded from logs — only method, path, status
+		level INFO
+	}
+}
+
+et.dandiproject.org {
+	# Automatic TLS via Let's Encrypt — no configuration needed
+
+	# Legacy path support — old clients use /et/projects/...
+	handle /et/* {
+		uri strip_prefix /et
+		reverse_proxy server:8000
+	}
+
+	# All other requests go to the server
+	handle {
+		reverse_proxy server:8000
+	}
+}

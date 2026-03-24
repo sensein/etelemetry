@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}Projects - etelemetry Dashboard{% endblock %}
+
+{% block content %}
+<h1>Tracked Projects</h1>
+<section aria-label="Project list">
+    <table>
+        <caption>All tracked projects with their total version check counts</caption>
+        <thead>
+            <tr>
+                <th scope="col">Project</th>
+                <th scope="col">Total Checks</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for project in projects %}
+            <tr>
+                <td>
+                    <a href="/dashboard/project/{{ project.owner }}/{{ project.repo }}">
+                        {{ project.owner }}/{{ project.repo }}
+                    </a>
+                </td>
+                <td>{{ project.total_checks }}</td>
+            </tr>
+            {% endfor %}
+            {% if not projects %}
+            <tr>
+                <td colspan="2">No projects tracked yet.</td>
+            </tr>
+            {% endif %}
+        </tbody>
+    </table>
+</section>
+{% endblock %}

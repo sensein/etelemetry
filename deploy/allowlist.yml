@@ -1,0 +1,20 @@
+# etelemetry allowlist — tracked repositories
+# Only projects listed here will be served by the etelemetry server.
+# The server reloads this file on restart or SIGHUP.
+#
+# Format:
+#   projects:
+#     - owner: <github-org-or-user>
+#       repo: <repository-name>
+
+projects:
+  - owner: nipy
+    repo: nipype
+  - owner: nipy
+    repo: nibabel
+  - owner: nipy
+    repo: nitransforms
+  - owner: sensein
+    repo: senselab
+  - owner: sensein
+    repo: etelemetry-client

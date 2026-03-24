@@ -56,7 +56,7 @@ jobs:
           fetch-depth: 0
       - uses: astral-sh/setup-uv@v4
       - run: uv python install 3.11
-      - run: uv run --python 3.11 --extra dev --directory server pytest server/tests/unit/ -v --tb=short
+      - run: uv run --python 3.11 --extra dev --directory server pytest tests/unit/ -v --tb=short
 
   validate-infra:
     runs-on: ubuntu-latest

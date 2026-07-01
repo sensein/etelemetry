@@ -1,0 +1,9 @@
+[Unit]
+Description=Daily Let's Encrypt renew + ACM import (no-op until ~30d before expiry)
+
+[Timer]
+OnCalendar=*-*-* 04:00:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target

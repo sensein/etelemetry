@@ -1,0 +1,90 @@
+# Old rig.mit.edu etelemetry deployment (manual, docker-compose v1 on the EC2 instance
+# at /home/ec2-user/src). Reconstructed from the running server, with two hardening
+# changes applied during the 2026-07-01 recovery:
+#   * restart: unless-stopped on every service (was: none on server/mongo => did not
+#     auto-recover after the 2026-05-12 crash or a reboot).
+#   * logging max-size/max-file so container json logs can't grow unbounded.
+# Secrets are read from .env (see .env.example) rather than hard-coded.
+#
+# Data/paths on the instance (bind mounts, all on the EBS root volume):
+#   ../mongo-scratch/data  -> mongo /data/db   (the live database, ~4.2G)
+#   ../out/cache           -> server /cache    (project version cache)
+#   ../out/logs            -> server /vagrant   (app console.log / access.log)
+#   ../out/backup          -> mongo /backup    (local mongodump archives)
+services:
+  server:
+    build: ../etelemetry-server
+    container_name: "et-server"
+    restart: unless-stopped
+    environment:
+      - DB_HOSTNAME=mongodb://mongo:27017/et
+      - ETELEMETRY_CACHE=/cache
+      - ETELEMETRY_APP_CONFIG=/config/et.cfg
+      - IPSTACK_API_KEY=${IPSTACK_API_KEY}
+    links:
+      - mongodb:mongo
+    networks:
+      - backend
+    expose:
+      - "80"  # internal port only; TLS terminates at the ALB
+    depends_on:
+      - mongodb
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "3"
+    volumes:
+      - ../etelemetry-server:/src  # reflect code updates
+      - ../out/cache:/cache
+      - ./config:/config
+      - ../out/logs:/vagrant
+
+  mongodb:
+    image: "mongo:4.1.13-bionic"
+    container_name: "mongo"
+    restart: unless-stopped
+    networks:
+      - backend
+    ports:
+      - "27017:27017"
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "3"
+    volumes:
+      - ${DB_DATA_DIR}:/data/db
+      - ${DB_LOG_DIR}:/logs/db
+      - ../out/backup:/backup
+
+  nginx:
+    image: nginx:latest
+    container_name: "nginx-proxy"
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "3"
+    volumes:
+      - ./nginx/conf:/etc/nginx/conf.d/:ro
+      - ./certbot/www/:/var/www/certbot/:ro
+    depends_on:
+      - server
+    networks:
+      - backend
+      - default
+
+  # One-shot; invoked by renew-cert.sh via `docker run`, not kept running.
+  certbot:
+    image: certbot/certbot:latest
+    volumes:
+      - ./certbot/www/:/var/www/certbot/:rw
+      - ./certbot/conf/:/etc/letsencrypt/:rw
+
+networks:
+  backend:
+  default:

@@ -1,0 +1,6 @@
+[Unit]
+Description=MongoDB (et) dump to S3
+
+[Service]
+Type=oneshot
+ExecStart=/home/ec2-user/src/backup-mongo.sh

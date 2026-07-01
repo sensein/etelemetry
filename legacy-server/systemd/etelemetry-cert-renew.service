@@ -1,0 +1,6 @@
+[Unit]
+Description=Renew Let's Encrypt cert and re-import to ACM
+
+[Service]
+Type=oneshot
+ExecStart=/home/ec2-user/src/renew-cert.sh

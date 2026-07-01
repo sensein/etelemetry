@@ -1,0 +1,6 @@
+[Unit]
+Description=Prune old etelemetry app logs (out/logs)
+
+[Service]
+Type=oneshot
+ExecStart=/home/ec2-user/src/prune-etelemetry-logs.sh

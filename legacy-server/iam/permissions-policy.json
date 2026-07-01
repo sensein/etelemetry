@@ -1,0 +1,30 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "MongoBackupWrite",
+      "Effect": "Allow",
+      "Action": [
+        "s3:PutObject"
+      ],
+      "Resource": "arn:aws:s3:::etelemetry-backup/*"
+    },
+    {
+      "Sid": "MongoBackupList",
+      "Effect": "Allow",
+      "Action": [
+        "s3:ListBucket"
+      ],
+      "Resource": "arn:aws:s3:::etelemetry-backup"
+    },
+    {
+      "Sid": "CertImportForALB",
+      "Effect": "Allow",
+      "Action": [
+        "acm:ImportCertificate",
+        "acm:DescribeCertificate"
+      ],
+      "Resource": "arn:aws:acm:us-east-2:278212569472:certificate/c34a3938-a305-405c-a4ae-7bda5413b1f3"
+    }
+  ]
+}

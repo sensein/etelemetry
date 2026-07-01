@@ -176,6 +176,11 @@ keys live on the box (the old invalid ones were moved to `*.stale-invalid.bak`).
   `sshd` (symptom: SSH "Connection timed out during banner exchange" while CPU is high but
   network is idle). It is stopped/disabled/masked. Do **not** re-enable it; the kernel CRNG
   provides entropy on Nitro. `dnf upgrade` may ship a fixed rng-tools — re-evaluate then.
+- **Memory pressure / swap:** 4GB RAM and the DB is 4.2G. With **no swap**, reading the DB
+  (e.g. a full `mongodump`) fills page cache, the kernel goes into direct reclaim (`kswapd0`
+  pegs a core), mongo stops answering (`mongodump` "i/o timeout"), and sshd starves. A 2G
+  swapfile (`scripts/add-swap.sh`, `vm.swappiness=10`) fixes this; keep it. The incremental
+  backup scheme also avoids the heavy full read except on the weekly base.
 - **No cron by default:** AL2023 has no `cronie`. Use the **systemd timers** here.
 - **SSH under load:** heavy `mongodump`/recovery makes sshd slow to answer. Don't hammer
   reconnects (each timed-out attempt holds an sshd `MaxStartups` slot ~120s and compounds
@@ -189,13 +194,13 @@ keys live on the box (the old invalid ones were moved to `*.stale-invalid.bak`).
 ## 11. Rebuild / come back to this deployment
 
 1. Instance with docker + docker-compose (v1), EBS root ≥16G, IAM role `etelemetry-old-server`.
-2. Recreate `/home/ec2-user/src` from this dir; add `.env` from `.env.example` (real
+2. `scripts/add-swap.sh` (2G swapfile) and confirm `rngd` is masked (`systemctl mask rngd`).
+3. Recreate `/home/ec2-user/src` from this dir; add `.env` from `.env.example` (real
    `IPSTACK_API_KEY`); clone the app repo to `/home/ec2-user/etelemetry-server`.
-3. Restore MongoDB (§6) into `/home/ec2-user/mongo-scratch/data`.
-4. `cd ~/src && docker-compose up -d --build`.
-5. Install `docker/daemon.json`, copy the three scripts into `~/src`, run
-   `scripts/setup-timers.sh`.
-6. Obtain/renew the cert (`renew-cert.sh`) and confirm the ALB target is healthy + HTTPS valid.
+4. Restore MongoDB (§6) into `/home/ec2-user/mongo-scratch/data`.
+5. `cd ~/src && docker-compose up -d --build`.
+6. Install `docker/daemon.json`, copy the scripts into `~/src`, run `scripts/setup-timers.sh`.
+7. Obtain/renew the cert (`renew-cert.sh`) and confirm the ALB target is healthy + HTTPS valid.
 
 ## Files in this directory
 
@@ -203,11 +208,12 @@ keys live on the box (the old invalid ones were moved to `*.stale-invalid.bak`).
 docker-compose.yml            hardened compose (restart + logging), secrets via .env
 .env.example                  template for src/.env
 nginx/conf/rig.mit.edu.conf   nginx :80 proxy + acme-challenge webroot
-scripts/backup-mongo.sh       mongodump -> S3 (instance role), local retention 2
+scripts/add-swap.sh           add 2G swapfile (fixes memory-pressure/kswapd thrash)
+scripts/backup-mongo.sh       incremental mongodump (base|incr) -> S3 via instance role
 scripts/prune-etelemetry-logs.sh  delete out/logs rotations >21 days
-scripts/renew-cert.sh         certbot renew (webroot) + re-import to ACM
+scripts/renew-cert.sh         certbot renew (webroot) + re-import to ACM on change
 scripts/setup-timers.sh       install/enable the systemd timers (replaces cron)
-systemd/*.service, *.timer    the three maintenance units
+systemd/*.service, *.timer    maintenance units (log-prune, backup-base, backup-incr, cert-renew)
 docker/daemon.json            docker json-file log rotation defaults
 iam/trust-policy.json         EC2 assume-role trust for etelemetry-old-server
 iam/permissions-policy.json   least-priv S3 + ACM permissions

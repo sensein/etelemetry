@@ -2,8 +2,9 @@
 Description=Weekly etelemetry MongoDB full base backup
 
 [Timer]
+# No Persistent=true: a missed weekly FULL dump must NOT fire on boot (it pegs this
+# memory-limited box and starves sshd). It simply runs at the next Sunday window.
 OnCalendar=Sun *-*-* 02:00:00
-Persistent=true
 
 [Install]
 WantedBy=timers.target

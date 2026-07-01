@@ -2,8 +2,8 @@
 Description=Daily etelemetry MongoDB incremental backup
 
 [Timer]
+# No Persistent=true: don't fire a catch-up dump on boot.
 OnCalendar=*-*-* 02:30:00
-Persistent=true
 
 [Install]
 WantedBy=timers.target

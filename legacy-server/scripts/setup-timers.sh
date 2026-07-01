@@ -40,7 +40,6 @@ Description=Weekly etelemetry MongoDB full base backup
 
 [Timer]
 OnCalendar=Sun *-*-* 02:00:00
-Persistent=true
 
 [Install]
 WantedBy=timers.target'
@@ -57,7 +56,6 @@ Description=Daily etelemetry MongoDB incremental backup
 
 [Timer]
 OnCalendar=*-*-* 02:30:00
-Persistent=true
 
 [Install]
 WantedBy=timers.target'

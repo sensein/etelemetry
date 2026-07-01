@@ -182,6 +182,13 @@ keys live on the box (the old invalid ones were moved to `*.stale-invalid.bak`).
   swapfile (`scripts/add-swap.sh`, `vm.swappiness=10`) fixes this; keep it. The incremental
   backup scheme also avoids the heavy full read except on the weekly base.
 - **No cron by default:** AL2023 has no `cronie`. Use the **systemd timers** here.
+- **Old `schedule-backup` user timer (disabled):** an earlier attempt lived in the *user*
+  systemd instance (`~/.config/systemd/user/schedule-backup.{service,timer}`, `ExecStart=%h/src/backup-mongo.sh`).
+  It was unreliable (`Linger=no` → the user manager only runs during a login, so the daily
+  `OnCalendar` rarely fired — hence no backups after Aug 2025) and, being `WantedBy=default.target`,
+  it re-ran `backup-mongo.sh` on **every SSH login**, piling up mongodumps. It has been
+  disabled in favor of the **system-level** timers above (which run regardless of login).
+  Don't re-enable it.
 - **SSH under load:** heavy `mongodump`/recovery makes sshd slow to answer. Don't hammer
   reconnects (each timed-out attempt holds an sshd `MaxStartups` slot ~120s and compounds
   the problem). Prefer one patient connection, or drive the box via the EC2 API.

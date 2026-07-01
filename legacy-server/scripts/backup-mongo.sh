@@ -14,6 +14,8 @@ ts=$(date --iso-8601=seconds -u)
 filename="$BACKUP_DIR/et.archive.${ts}.gz"
 
 mkdir -p "$BACKUP_DIR"
+# Remove the (partial) dump on any early/failed exit; cleared on success below.
+trap 'rm -f "$filename" 2>/dev/null' EXIT
 echo "Started: $(date -u)" >> "$LOG"
 
 # Fail early if the root filesystem is critically low (<1GB) to avoid corrupt 0-byte dumps.
@@ -40,7 +42,8 @@ aws s3 cp "$filename" "$BUCKET/$(basename "$filename")"
 # Keep a stable 'latest' pointer object too.
 aws s3 cp "$filename" "$BUCKET/et.archive.latest.gz"
 
-# Prune old LOCAL archives, keep the newest $LOCAL_KEEP.
+# Success: keep this archive (cancel the cleanup trap), then prune old LOCAL archives.
+trap - EXIT
 ls -1t "$BACKUP_DIR"/et.archive.*.gz 2>/dev/null | tail -n +$((LOCAL_KEEP + 1)) | xargs -r rm -f
 
 echo "Finished: $(date -u)  size=${size}  file=$(basename "$filename")" >> "$LOG"

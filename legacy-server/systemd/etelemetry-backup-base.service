@@ -1,0 +1,6 @@
+[Unit]
+Description=MongoDB (et) FULL base dump to S3 (sets requests _id watermark)
+
+[Service]
+Type=oneshot
+ExecStart=/home/ec2-user/src/backup-mongo.sh base

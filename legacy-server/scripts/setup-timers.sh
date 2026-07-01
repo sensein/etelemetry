@@ -28,18 +28,35 @@ Persistent=true
 [Install]
 WantedBy=timers.target'
 
-write etelemetry-backup.service '[Unit]
-Description=MongoDB (et) dump to S3
+write etelemetry-backup-base.service '[Unit]
+Description=MongoDB (et) FULL base dump to S3 (sets requests _id watermark)
 
 [Service]
 Type=oneshot
-ExecStart=/home/ec2-user/src/backup-mongo.sh'
+ExecStart=/home/ec2-user/src/backup-mongo.sh base'
 
-write etelemetry-backup.timer '[Unit]
-Description=Weekly etelemetry MongoDB backup
+write etelemetry-backup-base.timer '[Unit]
+Description=Weekly etelemetry MongoDB full base backup
 
 [Timer]
 OnCalendar=Sun *-*-* 02:00:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target'
+
+write etelemetry-backup-incr.service '[Unit]
+Description=MongoDB (et) INCREMENTAL dump to S3 (new requests since watermark)
+
+[Service]
+Type=oneshot
+ExecStart=/home/ec2-user/src/backup-mongo.sh incr'
+
+write etelemetry-backup-incr.timer '[Unit]
+Description=Daily etelemetry MongoDB incremental backup
+
+[Timer]
+OnCalendar=*-*-* 02:30:00
 Persistent=true
 
 [Install]
@@ -62,9 +79,13 @@ Persistent=true
 [Install]
 WantedBy=timers.target'
 
+echo "### remove superseded single backup unit (if present)"
+sudo systemctl disable --now etelemetry-backup.timer 2>/dev/null || true
+sudo rm -f /etc/systemd/system/etelemetry-backup.service /etc/systemd/system/etelemetry-backup.timer
+
 echo "### enable timers"
 sudo systemctl daemon-reload
-for t in etelemetry-log-prune etelemetry-backup etelemetry-cert-renew; do
+for t in etelemetry-log-prune etelemetry-backup-base etelemetry-backup-incr etelemetry-cert-renew; do
   sudo systemctl enable --now "$t.timer"
 done
 

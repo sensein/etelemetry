@@ -1,0 +1,6 @@
+[Unit]
+Description=MongoDB (et) INCREMENTAL dump to S3 (new requests since watermark)
+
+[Service]
+Type=oneshot
+ExecStart=/home/ec2-user/src/backup-mongo.sh incr

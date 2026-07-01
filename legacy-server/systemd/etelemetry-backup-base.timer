@@ -1,5 +1,5 @@
 [Unit]
-Description=Weekly etelemetry MongoDB backup
+Description=Weekly etelemetry MongoDB full base backup
 
 [Timer]
 OnCalendar=Sun *-*-* 02:00:00

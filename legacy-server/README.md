@@ -108,26 +108,43 @@ They run as **root** (so the scripts' `sudo`/AWS-role calls work without a tty).
 | Timer | Schedule (UTC) | Runs | Purpose |
 |---|---|---|---|
 | `etelemetry-log-prune.timer` | daily 03:30 | `prune-etelemetry-logs.sh` | delete `out/logs` rotations older than 21 days (prevents the disk-full recurrence) |
-| `etelemetry-backup.timer` | Sun 02:00 | `backup-mongo.sh` | weekly `mongodump` → S3 |
-| `etelemetry-cert-renew.timer` | daily 04:00 | `renew-cert.sh` | certbot renew + re-import to ACM (no-op until ~30d before expiry) |
+| `etelemetry-backup-base.timer` | Sun 02:00 | `backup-mongo.sh base` | weekly FULL `mongodump` → S3; records the requests `_id` watermark |
+| `etelemetry-backup-incr.timer` | daily 02:30 | `backup-mongo.sh incr` | INCREMENTAL: dumps only `requests` inserted since the watermark (fast/small) |
+| `etelemetry-cert-renew.timer` | daily 04:00 | `renew-cert.sh` | certbot renew + re-import to ACM (import only on actual change) |
 
 Check them: `systemctl list-timers 'etelemetry-*'`.
 
 ## 6. Backups & restore
 
-**Two kinds of backup exist in `s3://etelemetry-backup/`:**
-- **Logical** (`et.archive.<ts>.gz`, plus `et.archive.latest.gz`) — `mongodump --gzip
-  --archive` of the `et` DB. Produced weekly by the backup timer.
-- **Cold** (`cold-backups/mongo-data-*.tar.gz`) — a tar of the raw `mongo-scratch/data`
-  dir, taken while mongo was stopped during the 2026-07-01 recovery.
+Backups live in `s3://etelemetry-backup/`. The `requests` collection is **append-only**,
+so backups are incremental by `_id` (each backup writes only new docs, not the whole 81M-row
+DB):
 
-**Restore from a logical backup:**
+- **Incremental** (`incremental/et.base.<ts>.gz` + `incremental/et.incr.<ts>.gz`) — a weekly
+  FULL **base** dump of the `et` DB plus daily **increments** containing only `requests`
+  inserted since the last `_id` watermark (`incremental/requests.watermark`). Base captures
+  the small collections (`v1`, `geo`). This is the primary, ongoing backup.
+- **Cold** (`cold-backups/mongo-data-*.tar.gz`) — a tar of the raw `mongo-scratch/data`
+  dir, taken while mongo was stopped during the 2026-07-01 recovery (disaster fallback).
+- **Legacy** (`et.archive.*.gz` at the bucket root) — old full `mongodump` archives
+  (through Aug 2025), kept for history.
+
+**Restore (incremental):** restore the latest base, then replay every newer increment in
+timestamp order (increments are non-overlapping inserts, so order-of-`_id` == order-of-time):
 ```sh
-aws s3 cp s3://etelemetry-backup/et.archive.latest.gz - \
+aws s3 cp s3://etelemetry-backup/incremental/et.base.<latest>.gz - \
   | sudo docker exec -i mongo sh -c 'mongorestore --gzip --archive --drop -d et'
+for f in $(aws s3 ls s3://etelemetry-backup/incremental/ | awk '/et.incr\./{print $4}' | sort); do
+  aws s3 cp "s3://etelemetry-backup/incremental/$f" - \
+    | sudo docker exec -i mongo sh -c 'mongorestore --gzip --archive -d et'   # no --drop
+done
 ```
 **Restore from a cold backup** (mongo stopped): extract the tar into
 `/home/ec2-user/mongo-scratch/` (replacing `data/`), then `docker start mongo`.
+
+> Trade-off (by design): incremental restore replays multiple files, but each backup run
+> writes only new `requests` instead of re-dumping all 81M docs — turning a ~30-min full
+> dump into a seconds-long delta.
 
 ## 7. TLS / certificate renewal
 
